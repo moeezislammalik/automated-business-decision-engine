@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Decision Rules - Decision Engine{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Configured Decision Rules</h2>
+        <p class="text-muted">
+            The following rules are used to evaluate each record in the uploaded dataset.
+            Each rule contributes a weight to the total score when its condition is met.
+        </p>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Active Rules ({{ rules|length }} total)</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Rule Name</th>
+                        <th>Column</th>
+                        <th>Condition</th>
+                        <th>Weight</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in rules %}
+                    <tr>
+                        <td><strong>{{ rule.name }}</strong></td>
+                        <td><code>{{ rule.column }}</code></td>
+                        <td>Value triggers at <code>{{ rule.threshold }}</code></td>
+                        <td>
+                            <span class="badge fs-6 {% if rule.weight > 0 %}bg-danger{% else %}bg-success{% endif %}">
+                                {% if rule.weight > 0 %}+{% endif %}{{ rule.weight }}
+                            </span>
+                        </td>
+                        <td class="text-muted">{{ rule.description }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0">Score Interpretation</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li><span class="badge bg-success">0-19</span> Low cumulative score</li>
+                    <li class="mt-2"><span class="badge bg-warning text-dark">20-39</span> Moderate cumulative score</li>
+                    <li class="mt-2"><span class="badge bg-danger">40+</span> High cumulative score</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0">How Scoring Works</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">
+                    For each record, the engine evaluates all rules. When a rule's condition is satisfied,
+                    its weight is added to the record's total score. Negative weights reduce the score.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
