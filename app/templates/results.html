@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Results - Decision Engine{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Evaluation Results</h2>
+        <p class="text-muted">
+            File: <strong>{{ filename }}</strong> | 
+            Total Records Processed: <strong>{{ total_records }}</strong>
+        </p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">
+            Upload Another File
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="mb-0">Score Results by Record</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Record ID</th>
+                        <th>Total Score</th>
+                        <th>Rules Triggered</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td><strong>{{ result.record_id }}</strong></td>
+                        <td>
+                            <span class="badge fs-6 {% if result.total_score >= 40 %}bg-danger{% elif result.total_score >= 20 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                {{ result.total_score }}
+                            </span>
+                        </td>
+                        <td>{{ result.rules_count }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                    data-bs-toggle="collapse" 
+                                    data-bs-target="#details-{{ loop.index }}">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="details-{{ loop.index }}">
+                        <td colspan="4" class="bg-light">
+                            {% if result.triggered_rules %}
+                            <div class="p-3">
+                                <h6>Triggered Rules:</h6>
+                                <ul class="list-group">
+                                    {% for rule in result.triggered_rules %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong>{{ rule.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                {{ rule.description }} ({{ rule.column }} threshold: {{ rule.threshold }})
+                                            </small>
+                                        </div>
+                                        <span class="badge {% if rule.weight > 0 %}bg-danger{% else %}bg-success{% endif %} rounded-pill">
+                                            {% if rule.weight > 0 %}+{% endif %}{{ rule.weight }}
+                                        </span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% else %}
+                            <div class="p-3 text-muted">
+                                <em>No rules were triggered for this record.</em>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4 shadow-sm">
+    <div class="card-header">
+        <h5 class="mb-0">Active Rules Used for Evaluation</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Rule Name</th>
+                        <th>Column</th>
+                        <th>Threshold</th>
+                        <th>Weight</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in rules %}
+                    <tr>
+                        <td>{{ rule.name }}</td>
+                        <td><code>{{ rule.column }}</code></td>
+                        <td>{{ rule.threshold }}</td>
+                        <td>
+                            <span class="{% if rule.weight > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {% if rule.weight > 0 %}+{% endif %}{{ rule.weight }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

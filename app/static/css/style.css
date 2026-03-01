@@ -1,0 +1,46 @@
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+.table th {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.collapse.show + tr,
+tr.collapsing {
+    background-color: #f8f9fa;
+}
+
+code {
+    background-color: #e9ecef;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    color: #495057;
+}
+
+.alert ul {
+    margin-bottom: 0;
+}
+
+footer {
+    margin-top: auto;
+}

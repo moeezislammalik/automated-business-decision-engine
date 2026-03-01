@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Dataset - Decision Engine{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Upload Dataset for Evaluation</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Upload a CSV file containing business records to evaluate using the decision engine.
+                    Each record will be scored based on predefined weighted rules.
+                </p>
+
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">Required Columns:</h6>
+                    <ul class="mb-0">
+                        {% for col in required_columns %}
+                        <li><code>{{ col }}</code></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <form action="{{ url_for('main.upload_file') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                        <div class="form-text">Maximum file size: 16MB</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        Upload and Evaluate
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">How It Works</h5>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li>Upload a CSV file with the required columns</li>
+                    <li>The system validates the file structure and data types</li>
+                    <li>Each record is evaluated against predefined weighted rules</li>
+                    <li>A cumulative risk score is calculated for each record</li>
+                    <li>View the results showing scores and triggered rules</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
