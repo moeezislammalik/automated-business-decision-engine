@@ -4,6 +4,12 @@ from werkzeug.utils import secure_filename
 
 from app.modules.validation import validate_csv_file, REQUIRED_COLUMNS
 from app.modules.engine import DecisionEngine
+from app.modules.database import (
+    save_evaluation_run, 
+    get_evaluation_runs, 
+    get_run_results,
+    get_classification_summary
+)
 
 main = Blueprint('main', __name__)
 
@@ -55,6 +61,10 @@ def upload_file():
     results_data = [result.to_dict() for result in results]
     rules_summary = engine.get_rules_summary()
     
+    run_id = save_evaluation_run(filename, results_data)
+    
+    classification_summary = get_classification_summary(run_id)
+    
     total_records = len(results_data)
     
     os.remove(filepath)
@@ -64,7 +74,9 @@ def upload_file():
         results=results_data,
         rules=rules_summary,
         total_records=total_records,
-        filename=filename
+        filename=filename,
+        run_id=run_id,
+        classification_summary=classification_summary
     )
 
 
@@ -73,4 +85,38 @@ def view_rules():
     """Display the configured decision rules."""
     engine = DecisionEngine()
     rules = engine.get_rules_summary()
-    return render_template('rules.html', rules=rules)
+    thresholds = engine.get_classification_thresholds()
+    return render_template('rules.html', rules=rules, thresholds=thresholds)
+
+
+@main.route('/history')
+def view_history():
+    """Display previous evaluation runs."""
+    runs = get_evaluation_runs()
+    return render_template('history.html', runs=runs)
+
+
+@main.route('/history/<int:run_id>')
+def view_run(run_id):
+    """View results from a specific evaluation run."""
+    run_data = get_run_results(run_id)
+    
+    if not run_data:
+        flash('Evaluation run not found.', 'error')
+        return redirect(url_for('main.view_history'))
+    
+    classification_summary = get_classification_summary(run_id)
+    
+    engine = DecisionEngine()
+    rules = engine.get_rules_summary()
+    
+    return render_template(
+        'results.html',
+        results=run_data['results'],
+        rules=rules,
+        total_records=run_data['total_records'],
+        filename=run_data['filename'],
+        run_id=run_id,
+        classification_summary=classification_summary,
+        is_historical=True
+    )
