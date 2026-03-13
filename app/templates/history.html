@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluation History - Decision Engine{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Evaluation History</h2>
+        <p class="text-muted">
+            View previously processed evaluation runs stored in the database.
+        </p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+            New Evaluation
+        </a>
+    </div>
+</div>
+
+{% if runs %}
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="mb-0">Previous Evaluation Runs</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Run ID</th>
+                        <th>Filename</th>
+                        <th>Records Processed</th>
+                        <th>Timestamp</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in runs %}
+                    <tr>
+                        <td><strong>#{{ run.id }}</strong></td>
+                        <td>{{ run.filename }}</td>
+                        <td>{{ run.total_records }}</td>
+                        <td>{{ run.timestamp }}</td>
+                        <td>
+                            <a href="{{ url_for('main.view_run', run_id=run.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                View Results
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card shadow">
+    <div class="card-body text-center py-5">
+        <h4 class="text-muted">No Evaluation Runs Yet</h4>
+        <p class="text-muted">Upload a CSV file to create your first evaluation.</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+            Upload Dataset
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

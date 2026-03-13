@@ -4,17 +4,26 @@ A locally hosted web-based software system that formalizes structured business d
 
 ## Overview
 
-This system accepts structured tabular datasets in CSV format, applies deterministic weighted decision rules to each record, computes a cumulative score, and displays the results with details on which rules were triggered.
+This system accepts structured tabular datasets in CSV format, applies deterministic weighted decision rules to each record, computes a cumulative score, assigns a classification based on thresholds, and generates a human-readable explanation describing how the final decision was reached.
 
-## Features (Checkpoint 1)
+## Features
 
-- Flask web application accessible via localhost
+### Checkpoint 1 (Complete)
+- Flask web application accessible via localhost:5000
 - CSV file upload interface with validation
 - Schema validation for required columns and data types
 - 7 weighted decision rules with configurable thresholds
 - Scoring loop that calculates total score per record
 - Results display showing scores and triggered rules per record
 - 29 passing unit tests
+
+### Checkpoint 2 (Complete)
+- **Classification System**: Records classified as High Risk (≥40), Medium Risk (≥20), or Low Risk (<20)
+- **Explanation Traces**: Human-readable explanations showing which rules fired, weight contributions, and classification reasoning
+- **SQLite Database Persistence**: All evaluation results stored with timestamps
+- **History View**: Browse and review previous evaluation runs
+- **Classification Summary Dashboard**: Visual breakdown of High/Medium/Low risk counts
+- **54 passing unit tests** (25 new tests for classification and database)
 
 ## Required Columns
 
@@ -55,10 +64,21 @@ pytest tests/ -v
 │   ├── modules/
 │   │   ├── validation.py     # CSV schema validation
 │   │   ├── rules.py          # Rule class and default rules
-│   │   └── engine.py         # Decision scoring engine
+│   │   ├── engine.py         # Decision scoring engine with classification
+│   │   └── database.py       # SQLite persistence layer
 │   ├── templates/            # Jinja2 HTML templates
+│   │   ├── base.html         # Base template with navigation
+│   │   ├── upload.html       # File upload page
+│   │   ├── results.html      # Results dashboard with explanations
+│   │   ├── rules.html        # Rules overview
+│   │   └── history.html      # Previous evaluation runs
 │   └── static/css/           # Stylesheets
-├── tests/                    # Unit tests
+├── tests/                    # Unit tests (54 total)
+│   ├── test_rules.py         # Rule evaluation tests
+│   ├── test_validation.py    # Validation tests
+│   ├── test_engine.py        # Engine and scoring tests
+│   ├── test_classification.py # Classification threshold tests
+│   └── test_database.py      # Database persistence tests
 ├── data/                     # Sample CSV files
 ├── requirements.txt          # Python dependencies
 └── run.py                    # Application entry point
@@ -75,6 +95,31 @@ pytest tests/ -v
 | Low Revenue | Revenue | < $1,000 | +15 |
 | Very Low Revenue | Revenue | < $500 | +10 |
 | High Revenue Contributor | Revenue | > $5,000 | -10 |
+
+## Classification Thresholds
+
+| Classification | Score Range |
+|---------------|-------------|
+| High Risk | ≥ 40 |
+| Medium Risk | 20 - 39 |
+| Low Risk | < 20 |
+
+## Database Schema
+
+**evaluation_runs**
+- id (INTEGER PRIMARY KEY)
+- filename (TEXT)
+- total_records (INTEGER)
+- timestamp (DATETIME)
+
+**results**
+- id (INTEGER PRIMARY KEY)
+- run_id (FOREIGN KEY)
+- record_id (TEXT)
+- score (INTEGER)
+- classification (TEXT)
+- explanation (TEXT)
+- timestamp (DATETIME)
 
 ## Author
 

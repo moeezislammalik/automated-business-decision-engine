@@ -9,12 +9,49 @@
         <p class="text-muted">
             File: <strong>{{ filename }}</strong> | 
             Total Records Processed: <strong>{{ total_records }}</strong>
+            {% if is_historical %}
+            <span class="badge bg-secondary">Historical View</span>
+            {% endif %}
         </p>
     </div>
     <div class="col-auto">
         <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">
             Upload Another File
         </a>
+        <a href="{{ url_for('main.view_history') }}" class="btn btn-outline-secondary">
+            View History
+        </a>
+    </div>
+</div>
+
+<!-- Classification Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <h3 class="text-danger">{{ classification_summary.get('High Risk', 0) }}</h3>
+                <p class="mb-0">High Risk</p>
+                <small class="text-muted">Score ≥ 40</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <h3 class="text-warning">{{ classification_summary.get('Medium Risk', 0) }}</h3>
+                <p class="mb-0">Medium Risk</p>
+                <small class="text-muted">Score 20-39</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h3 class="text-success">{{ classification_summary.get('Low Risk', 0) }}</h3>
+                <p class="mb-0">Low Risk</p>
+                <small class="text-muted">Score < 20</small>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -29,6 +66,7 @@
                     <tr>
                         <th>Record ID</th>
                         <th>Total Score</th>
+                        <th>Classification</th>
                         <th>Rules Triggered</th>
                         <th>Details</th>
                     </tr>
@@ -38,23 +76,31 @@
                     <tr>
                         <td><strong>{{ result.record_id }}</strong></td>
                         <td>
-                            <span class="badge fs-6 {% if result.total_score >= 40 %}bg-danger{% elif result.total_score >= 20 %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                                {{ result.total_score }}
+                            <span class="badge fs-6 {% if result.classification == 'High Risk' %}bg-danger{% elif result.classification == 'Medium Risk' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                {{ result.total_score if result.total_score is defined else result.score }}
                             </span>
                         </td>
-                        <td>{{ result.rules_count }}</td>
+                        <td>
+                            <span class="{% if result.classification == 'High Risk' %}text-danger{% elif result.classification == 'Medium Risk' %}text-warning{% else %}text-success{% endif %} fw-bold">
+                                {{ result.classification }}
+                            </span>
+                        </td>
+                        <td>{{ result.rules_count if result.rules_count is defined else '-' }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-secondary" type="button" 
                                     data-bs-toggle="collapse" 
                                     data-bs-target="#details-{{ loop.index }}">
-                                View Details
+                                View Explanation
                             </button>
                         </td>
                     </tr>
                     <tr class="collapse" id="details-{{ loop.index }}">
-                        <td colspan="4" class="bg-light">
-                            {% if result.triggered_rules %}
+                        <td colspan="5" class="bg-light">
                             <div class="p-3">
+                                <h6>Explanation Trace:</h6>
+                                <pre class="bg-white p-3 rounded border mb-3" style="white-space: pre-wrap;">{{ result.explanation }}</pre>
+                                
+                                {% if result.triggered_rules %}
                                 <h6>Triggered Rules:</h6>
                                 <ul class="list-group">
                                     {% for rule in result.triggered_rules %}
@@ -72,12 +118,10 @@
                                     </li>
                                     {% endfor %}
                                 </ul>
+                                {% else %}
+                                <p class="text-muted mb-0"><em>No rules were triggered for this record.</em></p>
+                                {% endif %}
                             </div>
-                            {% else %}
-                            <div class="p-3 text-muted">
-                                <em>No rules were triggered for this record.</em>
-                            </div>
-                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
