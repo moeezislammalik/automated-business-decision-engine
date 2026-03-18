@@ -3,72 +3,90 @@
 {% block title %}Results - Decision Engine{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h2>Evaluation Results</h2>
-        <p class="text-muted">
-            File: <strong>{{ filename }}</strong> | 
-            Total Records Processed: <strong>{{ total_records }}</strong>
-            {% if is_historical %}
-            <span class="badge bg-secondary">Historical View</span>
-            {% endif %}
-        </p>
-    </div>
-    <div class="col-auto">
-        <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">
-            Upload Another File
-        </a>
-        <a href="{{ url_for('main.view_history') }}" class="btn btn-outline-secondary">
-            View History
-        </a>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h2 class="mb-1">Evaluation Results</h2>
+            <div class="stats-row mt-2">
+                <span class="stat-item">
+                    File: <strong>{{ filename }}</strong>
+                </span>
+                <span class="stat-item">
+                    Records: <strong>{{ total_records }}</strong>
+                </span>
+                {% if is_historical %}
+                <span class="badge bg-secondary">Historical View</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex gap-2 mt-2 mt-md-0">
+            <a href="{{ url_for('main.export_csv', run_id=run_id) }}" class="btn btn-success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download me-1" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                Export CSV
+            </a>
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">
+                Upload New
+            </a>
+            <a href="{{ url_for('main.view_history') }}" class="btn btn-outline-secondary">
+                History
+            </a>
+        </div>
     </div>
 </div>
 
 <!-- Classification Summary Cards -->
-<div class="row mb-4">
+<div class="row mb-4 g-3">
     <div class="col-md-4">
-        <div class="card border-danger">
+        <div class="card classification-card border-danger">
             <div class="card-body text-center">
                 <h3 class="text-danger">{{ classification_summary.get('High Risk', 0) }}</h3>
-                <p class="mb-0">High Risk</p>
+                <p class="mb-1 fw-semibold">High Risk</p>
                 <small class="text-muted">Score ≥ 40</small>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-warning">
+        <div class="card classification-card border-warning">
             <div class="card-body text-center">
                 <h3 class="text-warning">{{ classification_summary.get('Medium Risk', 0) }}</h3>
-                <p class="mb-0">Medium Risk</p>
+                <p class="mb-1 fw-semibold">Medium Risk</p>
                 <small class="text-muted">Score 20-39</small>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-success">
+        <div class="card classification-card border-success">
             <div class="card-body text-center">
                 <h3 class="text-success">{{ classification_summary.get('Low Risk', 0) }}</h3>
-                <p class="mb-0">Low Risk</p>
+                <p class="mb-1 fw-semibold">Low Risk</p>
                 <small class="text-muted">Score < 20</small>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Results Table -->
 <div class="card shadow">
-    <div class="card-header">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Score Results by Record</h5>
+        {% if total_pages > 1 %}
+        <span class="badge bg-light text-primary">Page {{ page }} of {{ total_pages }}</span>
+        {% endif %}
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Record ID</th>
-                        <th>Total Score</th>
+                        <th>Score</th>
                         <th>Classification</th>
                         <th>Rules Triggered</th>
-                        <th>Details</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -81,13 +99,15 @@
                             </span>
                         </td>
                         <td>
-                            <span class="{% if result.classification == 'High Risk' %}text-danger{% elif result.classification == 'Medium Risk' %}text-warning{% else %}text-success{% endif %} fw-bold">
+                            <span class="fw-bold {% if result.classification == 'High Risk' %}text-danger{% elif result.classification == 'Medium Risk' %}text-warning{% else %}text-success{% endif %}">
                                 {{ result.classification }}
                             </span>
                         </td>
-                        <td>{{ result.rules_count if result.rules_count is defined else '-' }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-secondary" type="button" 
+                            <span class="badge bg-secondary">{{ result.rules_count if result.rules_count is defined else '-' }}</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" type="button" 
                                     data-bs-toggle="collapse" 
                                     data-bs-target="#details-{{ loop.index }}">
                                 View Explanation
@@ -95,29 +115,31 @@
                         </td>
                     </tr>
                     <tr class="collapse" id="details-{{ loop.index }}">
-                        <td colspan="5" class="bg-light">
-                            <div class="p-3">
-                                <h6>Explanation Trace:</h6>
-                                <pre class="bg-white p-3 rounded border mb-3" style="white-space: pre-wrap;">{{ result.explanation }}</pre>
+                        <td colspan="5" class="bg-light p-0">
+                            <div class="p-4">
+                                <h6 class="mb-3">Explanation Trace</h6>
+                                <div class="explanation-box mb-3">{{ result.explanation }}</div>
                                 
                                 {% if result.triggered_rules %}
-                                <h6>Triggered Rules:</h6>
-                                <ul class="list-group">
+                                <h6 class="mb-3">Triggered Rules</h6>
+                                <div class="row g-2">
                                     {% for rule in result.triggered_rules %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <strong>{{ rule.name }}</strong>
-                                            <br>
-                                            <small class="text-muted">
-                                                {{ rule.description }} ({{ rule.column }} threshold: {{ rule.threshold }})
-                                            </small>
+                                    <div class="col-md-6">
+                                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong>{{ rule.name }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ rule.description }}
+                                                </small>
+                                            </div>
+                                            <span class="badge {% if rule.weight > 0 %}bg-danger{% else %}bg-success{% endif %} rounded-pill">
+                                                {% if rule.weight > 0 %}+{% endif %}{{ rule.weight }}
+                                            </span>
                                         </div>
-                                        <span class="badge {% if rule.weight > 0 %}bg-danger{% else %}bg-success{% endif %} rounded-pill">
-                                            {% if rule.weight > 0 %}+{% endif %}{{ rule.weight }}
-                                        </span>
-                                    </li>
+                                    </div>
                                     {% endfor %}
-                                </ul>
+                                </div>
                                 {% else %}
                                 <p class="text-muted mb-0"><em>No rules were triggered for this record.</em></p>
                                 {% endif %}
@@ -129,15 +151,36 @@
             </table>
         </div>
     </div>
+    
+    {% if total_pages > 1 %}
+    <div class="card-footer bg-white">
+        <nav aria-label="Results pagination">
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="?page={{ page - 1 }}">Previous</a>
+                </li>
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="?page={{ page + 1 }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 
+<!-- Rules Reference -->
 <div class="card mt-4 shadow-sm">
     <div class="card-header">
-        <h5 class="mb-0">Active Rules Used for Evaluation</h5>
+        <h5 class="mb-0">Active Rules Reference</h5>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-sm">
+            <table class="table table-sm mb-0">
                 <thead>
                     <tr>
                         <th>Rule Name</th>
@@ -153,7 +196,7 @@
                         <td><code>{{ rule.column }}</code></td>
                         <td>{{ rule.threshold }}</td>
                         <td>
-                            <span class="{% if rule.weight > 0 %}text-danger{% else %}text-success{% endif %}">
+                            <span class="{% if rule.weight > 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
                                 {% if rule.weight > 0 %}+{% endif %}{{ rule.weight }}
                             </span>
                         </td>
