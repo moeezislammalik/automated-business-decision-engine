@@ -1,5 +1,7 @@
 import os
-from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
+import csv
+import io
+from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, Response
 from werkzeug.utils import secure_filename
 
 from app.modules.validation import validate_csv_file, REQUIRED_COLUMNS
@@ -14,6 +16,7 @@ from app.modules.database import (
 main = Blueprint('main', __name__)
 
 ALLOWED_EXTENSIONS = {'csv'}
+RECORDS_PER_PAGE = 20
 
 
 def allowed_file(filename):
@@ -69,14 +72,24 @@ def upload_file():
     
     os.remove(filepath)
     
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    start_idx = (page - 1) * RECORDS_PER_PAGE
+    end_idx = start_idx + RECORDS_PER_PAGE
+    paginated_results = results_data[start_idx:end_idx]
+    total_pages = (total_records + RECORDS_PER_PAGE - 1) // RECORDS_PER_PAGE
+    
     return render_template(
         'results.html',
-        results=results_data,
+        results=paginated_results,
+        all_results=results_data,
         rules=rules_summary,
         total_records=total_records,
         filename=filename,
         run_id=run_id,
-        classification_summary=classification_summary
+        classification_summary=classification_summary,
+        page=page,
+        total_pages=total_pages
     )
 
 
@@ -110,13 +123,59 @@ def view_run(run_id):
     engine = DecisionEngine()
     rules = engine.get_rules_summary()
     
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    total_records = run_data['total_records']
+    start_idx = (page - 1) * RECORDS_PER_PAGE
+    end_idx = start_idx + RECORDS_PER_PAGE
+    paginated_results = run_data['results'][start_idx:end_idx]
+    total_pages = (total_records + RECORDS_PER_PAGE - 1) // RECORDS_PER_PAGE
+    
     return render_template(
         'results.html',
-        results=run_data['results'],
+        results=paginated_results,
         rules=rules,
-        total_records=run_data['total_records'],
+        total_records=total_records,
         filename=run_data['filename'],
         run_id=run_id,
         classification_summary=classification_summary,
-        is_historical=True
+        is_historical=True,
+        page=page,
+        total_pages=total_pages
+    )
+
+
+@main.route('/export/<int:run_id>')
+def export_csv(run_id):
+    """Export evaluation results to CSV file."""
+    run_data = get_run_results(run_id)
+    
+    if not run_data:
+        flash('Evaluation run not found.', 'error')
+        return redirect(url_for('main.view_history'))
+    
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['Record_ID', 'Score', 'Classification', 'Explanation'])
+    
+    # Write data rows
+    for result in run_data['results']:
+        writer.writerow([
+            result['record_id'],
+            result['score'],
+            result['classification'],
+            result['explanation'].replace('\n', ' | ')
+        ])
+    
+    # Create response
+    output.seek(0)
+    filename = f"evaluation_results_{run_id}.csv"
+    
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename={filename}'}
     )
