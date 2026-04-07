@@ -1,4 +1,5 @@
 import pandas as pd
+import time
 from typing import List, Dict, Any, Tuple
 from app.modules.rules import Rule, get_default_rules
 
@@ -105,6 +106,34 @@ class EvaluationResult:
         }
 
 
+class EvaluationMetrics:
+    """Performance metrics for an evaluation run."""
+    
+    def __init__(
+        self,
+        total_records: int,
+        runtime_ms: float,
+        records_per_second: float
+    ):
+        self.total_records = total_records
+        self.runtime_ms = runtime_ms
+        self.records_per_second = records_per_second
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'total_records': self.total_records,
+            'runtime_ms': round(self.runtime_ms, 2),
+            'runtime_formatted': self._format_runtime(),
+            'records_per_second': round(self.records_per_second, 1)
+        }
+    
+    def _format_runtime(self) -> str:
+        if self.runtime_ms < 1000:
+            return f"{self.runtime_ms:.0f} ms"
+        else:
+            return f"{self.runtime_ms / 1000:.2f} seconds"
+
+
 class DecisionEngine:
     """
     The core scoring engine that evaluates records against defined rules.
@@ -120,6 +149,7 @@ class DecisionEngine:
     
     def __init__(self, rules: List[Rule] = None):
         self.rules = rules if rules is not None else get_default_rules()
+        self.last_metrics = None
     
     def evaluate_record(self, row: dict) -> EvaluationResult:
         """
@@ -156,24 +186,36 @@ class DecisionEngine:
             record_id, total_score, classification, triggered_rules, explanation
         )
     
-    def evaluate_dataset(self, df: pd.DataFrame) -> List[EvaluationResult]:
+    def evaluate_dataset(self, df: pd.DataFrame) -> Tuple[List[EvaluationResult], EvaluationMetrics]:
         """
-        Evaluate all records in a dataset.
+        Evaluate all records in a dataset with performance tracking.
         
         Args:
             df: Pandas DataFrame containing the dataset
             
         Returns:
-            List of EvaluationResult objects, one per record
+            Tuple of (List of EvaluationResult objects, EvaluationMetrics)
         """
-        results = []
+        start_time = time.perf_counter()
         
+        results = []
         for _, row in df.iterrows():
             row_dict = row.to_dict()
             result = self.evaluate_record(row_dict)
             results.append(result)
         
-        return results
+        end_time = time.perf_counter()
+        runtime_ms = (end_time - start_time) * 1000
+        total_records = len(results)
+        records_per_second = total_records / (runtime_ms / 1000) if runtime_ms > 0 else 0
+        
+        self.last_metrics = EvaluationMetrics(
+            total_records=total_records,
+            runtime_ms=runtime_ms,
+            records_per_second=records_per_second
+        )
+        
+        return results, self.last_metrics
     
     def get_rules_summary(self) -> List[Dict[str, Any]]:
         """Return a summary of all configured rules."""
