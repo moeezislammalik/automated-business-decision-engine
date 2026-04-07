@@ -31,6 +31,8 @@
                         <th>Run ID</th>
                         <th>Filename</th>
                         <th>Records</th>
+                        <th>Runtime</th>
+                        <th>Speed</th>
                         <th>Timestamp</th>
                         <th>Actions</th>
                     </tr>
@@ -45,11 +47,29 @@
                         <td>
                             <span class="badge bg-secondary">{{ run.total_records }}</span>
                         </td>
+                        <td>
+                            {% if run.runtime_ms %}
+                                {% if run.runtime_ms < 1000 %}
+                                    {{ run.runtime_ms | round(0) }} ms
+                                {% else %}
+                                    {{ (run.runtime_ms / 1000) | round(2) }} sec
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if run.records_per_second %}
+                                {{ run.records_per_second | round(1) }} rec/sec
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                         <td class="text-muted">{{ run.timestamp }}</td>
                         <td>
                             <a href="{{ url_for('main.view_run', run_id=run.id) }}" 
                                class="btn btn-sm btn-outline-primary me-1">
-                                View Results
+                                View
                             </a>
                             <a href="{{ url_for('main.export_csv', run_id=run.id) }}" 
                                class="btn btn-sm btn-outline-success">
