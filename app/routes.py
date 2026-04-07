@@ -59,12 +59,13 @@ def upload_file():
         return redirect(url_for('main.index'))
     
     engine = DecisionEngine()
-    results = engine.evaluate_dataset(df)
+    results, metrics = engine.evaluate_dataset(df)
     
     results_data = [result.to_dict() for result in results]
     rules_summary = engine.get_rules_summary()
+    metrics_data = metrics.to_dict()
     
-    run_id = save_evaluation_run(filename, results_data)
+    run_id = save_evaluation_run(filename, results_data, metrics_data)
     
     classification_summary = get_classification_summary(run_id)
     
@@ -88,6 +89,7 @@ def upload_file():
         filename=filename,
         run_id=run_id,
         classification_summary=classification_summary,
+        metrics=metrics_data,
         page=page,
         total_pages=total_pages
     )
@@ -139,6 +141,7 @@ def view_run(run_id):
         filename=run_data['filename'],
         run_id=run_id,
         classification_summary=classification_summary,
+        metrics=run_data.get('metrics'),
         is_historical=True,
         page=page,
         total_pages=total_pages

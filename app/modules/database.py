@@ -1,4 +1,5 @@
 import sqlite3
+import json
 import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -37,6 +38,8 @@ def init_database():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 filename TEXT NOT NULL,
                 total_records INTEGER NOT NULL,
+                runtime_ms REAL,
+                records_per_second REAL,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -57,25 +60,31 @@ def init_database():
         conn.commit()
 
 
-def save_evaluation_run(filename: str, results: List[Dict[str, Any]]) -> int:
+def save_evaluation_run(filename: str, results: List[Dict[str, Any]], metrics: Dict[str, Any] = None) -> int:
     """
     Save a complete evaluation run to the database.
     
     Args:
         filename: Name of the uploaded CSV file
         results: List of evaluation result dictionaries
+        metrics: Optional performance metrics dictionary
         
     Returns:
         The run_id of the saved evaluation run
     """
     init_database()
     
+    runtime_ms = metrics.get('runtime_ms') if metrics else None
+    records_per_second = metrics.get('records_per_second') if metrics else None
+    
     with get_connection() as conn:
         cursor = conn.cursor()
         
         cursor.execute(
-            'INSERT INTO evaluation_runs (filename, total_records) VALUES (?, ?)',
-            (filename, len(results))
+            '''INSERT INTO evaluation_runs 
+               (filename, total_records, runtime_ms, records_per_second) 
+               VALUES (?, ?, ?, ?)''',
+            (filename, len(results), runtime_ms, records_per_second)
         )
         run_id = cursor.lastrowid
         
@@ -109,7 +118,7 @@ def get_evaluation_runs() -> List[Dict[str, Any]]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            '''SELECT id, filename, total_records, timestamp 
+            '''SELECT id, filename, total_records, runtime_ms, records_per_second, timestamp 
                FROM evaluation_runs 
                ORDER BY timestamp DESC'''
         )
@@ -120,6 +129,8 @@ def get_evaluation_runs() -> List[Dict[str, Any]]:
                 'id': row['id'],
                 'filename': row['filename'],
                 'total_records': row['total_records'],
+                'runtime_ms': row['runtime_ms'],
+                'records_per_second': row['records_per_second'],
                 'timestamp': row['timestamp']
             }
             for row in rows
@@ -142,7 +153,8 @@ def get_run_results(run_id: int) -> Optional[Dict[str, Any]]:
         cursor = conn.cursor()
         
         cursor.execute(
-            'SELECT id, filename, total_records, timestamp FROM evaluation_runs WHERE id = ?',
+            '''SELECT id, filename, total_records, runtime_ms, records_per_second, timestamp 
+               FROM evaluation_runs WHERE id = ?''',
             (run_id,)
         )
         run_row = cursor.fetchone()
@@ -159,11 +171,22 @@ def get_run_results(run_id: int) -> Optional[Dict[str, Any]]:
         )
         result_rows = cursor.fetchall()
         
+        metrics = None
+        if run_row['runtime_ms'] is not None:
+            runtime_ms = run_row['runtime_ms']
+            metrics = {
+                'runtime_ms': round(runtime_ms, 2),
+                'runtime_formatted': f"{runtime_ms:.0f} ms" if runtime_ms < 1000 else f"{runtime_ms / 1000:.2f} seconds",
+                'records_per_second': round(run_row['records_per_second'], 1) if run_row['records_per_second'] else None,
+                'total_records': run_row['total_records']
+            }
+        
         return {
             'run_id': run_row['id'],
             'filename': run_row['filename'],
             'total_records': run_row['total_records'],
             'run_timestamp': run_row['timestamp'],
+            'metrics': metrics,
             'results': [
                 {
                     'record_id': row['record_id'],
