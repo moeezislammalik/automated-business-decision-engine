@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.modules.engine import DecisionEngine, EvaluationResult, get_classification
+from app.modules.engine import DecisionEngine, EvaluationResult, EvaluationMetrics, get_classification
 from app.modules.rules import Rule, less_than, greater_than
 
 
@@ -39,6 +39,39 @@ class TestEvaluationResult:
         assert d['classification'] == "Medium Risk"
         assert d['rules_count'] == 1
         assert d['explanation'] == "Test explanation"
+
+
+class TestEvaluationMetrics:
+    """Tests for the EvaluationMetrics class."""
+    
+    def test_metrics_creation(self):
+        metrics = EvaluationMetrics(
+            total_records=100,
+            runtime_ms=50.5,
+            records_per_second=1980.2
+        )
+        assert metrics.total_records == 100
+        assert metrics.runtime_ms == 50.5
+        assert metrics.records_per_second == 1980.2
+    
+    def test_metrics_to_dict(self):
+        metrics = EvaluationMetrics(
+            total_records=100,
+            runtime_ms=50.5,
+            records_per_second=1980.2
+        )
+        d = metrics.to_dict()
+        assert d['total_records'] == 100
+        assert d['runtime_ms'] == 50.5
+        assert 'runtime_formatted' in d
+    
+    def test_runtime_formatted_ms(self):
+        metrics = EvaluationMetrics(100, 500, 200)
+        assert "500 ms" in metrics.to_dict()['runtime_formatted']
+    
+    def test_runtime_formatted_seconds(self):
+        metrics = EvaluationMetrics(100, 2500, 40)
+        assert "seconds" in metrics.to_dict()['runtime_formatted']
 
 
 class TestDecisionEngine:
@@ -111,7 +144,7 @@ class TestDecisionEngine:
         assert result.total_score == 45
         assert result.classification == "High Risk"
     
-    def test_evaluate_dataset(self):
+    def test_evaluate_dataset_returns_tuple(self):
         rules = [Rule("Test", "Tenure", less_than, 12, 10)]
         engine = DecisionEngine(rules=rules)
         
@@ -122,9 +155,26 @@ class TestDecisionEngine:
             'Revenue': [1000, 2000, 3000]
         })
         
-        results = engine.evaluate_dataset(df)
+        results, metrics = engine.evaluate_dataset(df)
         
+        assert isinstance(results, list)
+        assert isinstance(metrics, EvaluationMetrics)
         assert len(results) == 3
+        assert metrics.total_records == 3
+    
+    def test_evaluate_dataset_scores(self):
+        rules = [Rule("Test", "Tenure", less_than, 12, 10)]
+        engine = DecisionEngine(rules=rules)
+        
+        df = pd.DataFrame({
+            'Record_ID': ['R001', 'R002', 'R003'],
+            'Tenure': [6, 24, 8],
+            'Late_Payments': [0, 0, 0],
+            'Revenue': [1000, 2000, 3000]
+        })
+        
+        results, _ = engine.evaluate_dataset(df)
+        
         assert results[0].total_score == 10
         assert results[1].total_score == 0
         assert results[2].total_score == 10
@@ -143,11 +193,27 @@ class TestDecisionEngine:
             'Revenue': [1000, 2000, 3000]
         })
         
-        results = engine.evaluate_dataset(df)
+        results, _ = engine.evaluate_dataset(df)
         
         assert results[0].classification == "High Risk"
         assert results[1].classification == "Low Risk"
         assert results[2].classification == "Medium Risk"
+    
+    def test_evaluate_dataset_metrics_runtime(self):
+        rules = [Rule("Test", "Tenure", less_than, 12, 10)]
+        engine = DecisionEngine(rules=rules)
+        
+        df = pd.DataFrame({
+            'Record_ID': ['R001'],
+            'Tenure': [6],
+            'Late_Payments': [0],
+            'Revenue': [1000]
+        })
+        
+        _, metrics = engine.evaluate_dataset(df)
+        
+        assert metrics.runtime_ms > 0
+        assert metrics.records_per_second > 0
     
     def test_get_rules_summary(self):
         engine = DecisionEngine()
