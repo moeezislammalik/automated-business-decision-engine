@@ -1,0 +1,52 @@
+CS Senior Project – Weekly Progress Report
+Student Name: ______________________________
+Project Title: ______________________________
+Week #: ______________________________
+Report Date: ______________________________
+
+	•	Goals for This Week
+What did you plan to accomplish this week? Be specific. Refer to your developer work plan.
+	•	
+	•	
+	•	
+	•	
+	•	Work Completed This Week
+What you actually worked on. Include technical details where relevant.
+	•	Features implemented:
+
+	•	Research completed:
+
+	•	Design work:
+
+	•	Testing performed:
+
+	•	Other progress:
+
+	•	Evidence of Progress
+GitHub commits / repo link:
+Screenshots / demos:
+Documents updated (design doc, report, etc.):
+Other artifacts:
+
+	•	Challenges or Roadblocks
+What slowed you down or blocked progress?
+	•	
+	•	
+	•	
+
+How you addressed it (or plan to):
+
+	•	What I Learned This Week
+Technical, project management, or problem solving insights.
+	•	
+
+	•	Plan for Next Week
+Clear, actionable goals for the upcoming week. Refer to your developer work plan if necessary. Deviations are acceptable.
+	•	
+	•	
+
+	•	Support Needed
+Where you need feedback, clarification, or help.
+	•	
+	•	Time Spent on Capstone This Week
+Hours worked: ____________________
