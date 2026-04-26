@@ -19,13 +19,13 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">Upload</a>
+                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">Upload</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.view_rules') }}">View Rules</a>
+                        <a class="nav-link {% if request.endpoint == 'main.view_rules' %}active{% endif %}" href="{{ url_for('main.view_rules') }}">View Rules</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.view_history') }}">History</a>
+                        <a class="nav-link {% if request.endpoint in ['main.view_history', 'main.view_run'] %}active{% endif %}" href="{{ url_for('main.view_history') }}">History</a>
                     </li>
                 </ul>
             </div>

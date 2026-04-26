@@ -24,8 +24,8 @@
                     </div>
                 </div>
 
-                <form action="{{ url_for('main.upload_file') }}" method="post" enctype="multipart/form-data">
-                    <div class="upload-area mb-4">
+                <form action="{{ url_for('main.upload_file') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div class="upload-area mb-4" id="uploadArea">
                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#6c757d" class="bi bi-cloud-upload mb-3" viewBox="0 0 16 16">
                             <path fill-rule="evenodd" d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z"/>
                             <path fill-rule="evenodd" d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3z"/>
@@ -33,16 +33,58 @@
                         <div class="mb-3">
                             <label for="file" class="form-label fw-semibold">Select CSV File</label>
                             <input type="file" class="form-control form-control-lg" id="file" name="file" accept=".csv" required>
+                            <div id="fileInfo" class="mt-2 text-muted small" style="display:none;"></div>
                         </div>
                         <small class="text-muted">Maximum file size: 16MB</small>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg w-100">
+
+                    <!-- Processing feedback (shown during upload) -->
+                    <div id="processingFeedback" class="alert alert-info d-none mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-3" role="status" aria-hidden="true"></div>
+                            <div>
+                                <strong>Processing your dataset...</strong>
+                                <br><small id="processingDetail">Validating CSV structure and evaluating records. Large datasets may take a few seconds.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-play-fill me-2" viewBox="0 0 16 16">
                             <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
                         </svg>
                         Upload and Evaluate
                     </button>
                 </form>
+
+<script>
+document.getElementById('file').addEventListener('change', function() {
+    const file = this.files[0];
+    const infoDiv = document.getElementById('fileInfo');
+    if (file) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        infoDiv.textContent = 'Selected: ' + file.name + ' (' + sizeMB + ' MB)';
+        infoDiv.style.display = 'block';
+    } else {
+        infoDiv.style.display = 'none';
+    }
+});
+
+document.getElementById('uploadForm').addEventListener('submit', function() {
+    const file = document.getElementById('file').files[0];
+    const btn = document.getElementById('submitBtn');
+    const feedback = document.getElementById('processingFeedback');
+    const detail = document.getElementById('processingDetail');
+
+    if (file && file.size > 500000) {
+        detail.textContent = 'Large dataset detected (' + (file.size / (1024*1024)).toFixed(1) + ' MB). Processing may take a few seconds...';
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
+    feedback.classList.remove('d-none');
+});
+</script>
             </div>
         </div>
 

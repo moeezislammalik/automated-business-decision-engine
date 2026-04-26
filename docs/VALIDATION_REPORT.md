@@ -2,14 +2,14 @@
 ## Automated Business Decision Engine
 
 **Author:** Moeez Malik  
-**Date:** March 2026  
-**Checkpoint:** 3
+**Date:** April 2026  
+**Checkpoint:** 4 (Final)
 
 ---
 
 ## 1. Test Categories
 
-The test suite contains **58 unit tests** organized into the following categories:
+The test suite contains **60 unit tests** organized into the following categories:
 
 ### 1.1 Rule Evaluation Tests (14 tests)
 | Test Category | Count | Description |
@@ -27,7 +27,7 @@ The test suite contains **58 unit tests** organized into the following categorie
 | Non-Numeric Values | 1 | Detects invalid data types |
 | Null Values | 1 | Handles null value detection |
 
-### 1.3 Engine Tests (16 tests)
+### 1.3 Engine Tests (18 tests)
 | Test Category | Count | Description |
 |--------------|-------|-------------|
 | Evaluation Result | 2 | Tests result object creation and serialization |
@@ -128,15 +128,15 @@ Performance measured on MacBook Pro (Apple Silicon):
 ```
 ============================= test session starts ==============================
 platform darwin -- Python 3.13.1, pytest-9.0.2
-collected 58 items
+collected 60 items
 
-tests/test_classification.py .............. [24%]
-tests/test_database.py ........ [38%]
-tests/test_engine.py ................ [65%]
+tests/test_classification.py .............. [23%]
+tests/test_database.py ........ [36%]
+tests/test_engine.py .................. [66%]
 tests/test_rules.py .............. [89%]
 tests/test_validation.py ...... [100%]
 
-============================== 58 passed ==============================
+============================== 60 passed in 1.09s ==============================
 ```
 
 ---
@@ -162,9 +162,9 @@ tests/test_validation.py ...... [100%]
 
 The Automated Business Decision Engine has been thoroughly validated through:
 
-- **58 automated unit tests** covering all major functionality
+- **60 automated unit tests** covering all major functionality
 - **Boundary condition testing** for classification thresholds and rule evaluation
 - **Performance testing** with datasets up to 10,000 records
 - **Error handling verification** for all input validation scenarios
 
-The system meets all Checkpoint 3 requirements and demonstrates robust, scalable performance suitable for production use cases within the defined scope.
+The system meets all Checkpoint 4 requirements and demonstrates robust, scalable performance suitable for production use cases within the defined scope.
