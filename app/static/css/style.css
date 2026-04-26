@@ -270,6 +270,65 @@ footer {
     color: white;
 }
 
+/* Dashboard hero */
+.dashboard-hero {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+}
+
+/* Stat cards */
+.stat-card {
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+/* Legend dot */
+.legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 4px;
+}
+
+/* API code block */
+.api-code {
+    background: #1a1a2e;
+    color: #a8dadc;
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 0.78rem;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* Filter buttons active state */
+.filter-btn.active {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+    border-color: var(--primary-color) !important;
+}
+
 /* Page header */
 .page-header {
     background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);

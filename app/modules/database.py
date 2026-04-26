@@ -230,6 +230,67 @@ def get_classification_summary(run_id: int) -> Dict[str, int]:
         return summary
 
 
+def get_dashboard_stats() -> Dict[str, Any]:
+    """
+    Retrieve system-wide statistics for the home dashboard.
+
+    Returns:
+        Dictionary with total runs, total records, classification breakdown,
+        average runtime, and the 5 most recent evaluation runs.
+    """
+    init_database()
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT COUNT(*) as cnt FROM evaluation_runs')
+        total_runs = cursor.fetchone()['cnt']
+
+        cursor.execute('SELECT COALESCE(SUM(total_records), 0) as total FROM evaluation_runs')
+        total_records = cursor.fetchone()['total']
+
+        cursor.execute('''
+            SELECT classification, COUNT(*) as cnt
+            FROM results
+            GROUP BY classification
+        ''')
+        classification_totals = {'High Risk': 0, 'Medium Risk': 0, 'Low Risk': 0}
+        for row in cursor.fetchall():
+            classification_totals[row['classification']] = row['cnt']
+
+        cursor.execute(
+            'SELECT AVG(runtime_ms) as avg FROM evaluation_runs WHERE runtime_ms IS NOT NULL'
+        )
+        avg_row = cursor.fetchone()
+        avg_runtime_ms = round(avg_row['avg'], 1) if avg_row['avg'] else None
+
+        cursor.execute('''
+            SELECT id, filename, total_records, runtime_ms, records_per_second, timestamp
+            FROM evaluation_runs
+            ORDER BY timestamp DESC
+            LIMIT 5
+        ''')
+        recent_runs = [
+            {
+                'id': row['id'],
+                'filename': row['filename'],
+                'total_records': row['total_records'],
+                'runtime_ms': row['runtime_ms'],
+                'records_per_second': row['records_per_second'],
+                'timestamp': row['timestamp'],
+            }
+            for row in cursor.fetchall()
+        ]
+
+        return {
+            'total_runs': total_runs,
+            'total_records': total_records,
+            'classification_totals': classification_totals,
+            'avg_runtime_ms': avg_runtime_ms,
+            'recent_runs': recent_runs,
+        }
+
+
 def delete_run(run_id: int) -> bool:
     """
     Delete an evaluation run and its results.

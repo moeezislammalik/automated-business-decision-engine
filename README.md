@@ -5,6 +5,7 @@ A locally hosted web-based software system that formalizes structured business d
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)
 ![Tests](https://img.shields.io/badge/Tests-60%20passing-brightgreen.svg)
+![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## Overview
@@ -17,15 +18,20 @@ This system accepts structured tabular datasets in CSV format, applies determini
 
 | Feature | Description |
 |---------|-------------|
+| Home Dashboard | System-wide stats, all-time classification chart, recent runs |
 | CSV Upload | Upload datasets with validation for required columns and data types |
 | Rule Engine | 7 weighted decision rules evaluate each record |
 | Classification | Records classified as High Risk (≥40), Medium Risk (20-39), or Low Risk (<20) |
 | Explanations | Human-readable traces showing triggered rules and score calculations |
+| Charts | Doughnut chart (classification split) + score distribution histogram per evaluation |
+| Filter by Risk | One-click filtering of results table by High / Medium / Low Risk |
+| REST API | `POST /api/evaluate` — send JSON records, receive classifications programmatically |
 | Database Storage | SQLite persistence for all evaluation runs |
 | History View | Browse and review previous evaluations |
 | Export CSV | Download results with scores, classifications, and explanations |
 | Performance Metrics | Runtime tracking with records/second display |
 | Pagination | Handle large datasets with 20 records per page |
+| CI Pipeline | GitHub Actions runs 60 tests on every push |
 
 ---
 
@@ -278,14 +284,62 @@ python run.py
 
 ## API Endpoints
 
+### Web Routes
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/` | Upload page |
+| GET | `/` | Home dashboard |
+| GET | `/upload-form` | CSV upload page |
 | POST | `/upload` | Process uploaded CSV |
 | GET | `/rules` | View decision rules |
 | GET | `/history` | View past evaluations |
 | GET | `/history/<run_id>` | View specific run results |
 | GET | `/export/<run_id>` | Download results as CSV |
+
+### REST API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/evaluate` | Evaluate records from JSON payload |
+| GET | `/api/runs` | List all evaluation runs as JSON |
+| GET | `/api/runs/<run_id>` | Get specific run results as JSON |
+
+#### Example — POST /api/evaluate
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "records": [
+      {"Record_ID": "R001", "Tenure": 5, "Late_Payments": 4, "Revenue": 300}
+    ]
+  }'
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "total_records": 1,
+  "results": [
+    {
+      "record_id": "R001",
+      "score": 80,
+      "classification": "High Risk",
+      "triggered_rules": [
+        {"name": "Short Tenure", "weight": 15},
+        {"name": "Very Short Tenure", "weight": 10},
+        {"name": "High Late Payments", "weight": 20},
+        {"name": "Moderate Late Payments", "weight": 10},
+        {"name": "Low Revenue", "weight": 15},
+        {"name": "Very Low Revenue", "weight": 10}
+      ],
+      "explanation": "..."
+    }
+  ],
+  "metrics": {"runtime_ms": 0.5, "records_per_second": 2000.0}
+}
+```
 
 ---
 
