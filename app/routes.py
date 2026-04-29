@@ -72,9 +72,11 @@ def _score_distribution(results: list) -> dict:
 
 @main.route('/')
 def index():
-    """Home dashboard — system-wide stats and recent runs."""
+    """Home dashboard — system-wide stats, recent runs, and active rules."""
     stats = get_dashboard_stats()
-    return render_template('dashboard.html', stats=stats)
+    engine = DecisionEngine()
+    rules = engine.get_rules_summary()
+    return render_template('dashboard.html', stats=stats, rules=rules)
 
 
 @main.route('/upload-form')
